@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 )
@@ -8,15 +9,13 @@ import (
 // Server http server
 type Server struct {
 	Address string
-	Port    string
 	Router  *Router
 }
 
 // NewServer generate new server
-func NewServer(address, port string) *Server {
+func NewServer(address string) *Server {
 	return &Server{
 		Address: address,
-		Port:    port,
 		Router:  NewRouter(),
 	}
 }
@@ -43,11 +42,17 @@ func (s *Server) DELETE(path string, handler http.HandlerFunc) {
 
 // ServeHTTP implements http ServeHTTP
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	handlerKey := getPath(r.URL.Path) + r.Method
 
+	if route, ok := s.Router.Route[handlerKey]; ok {
+		route.Handler(w, r)
+	}
 }
 
-// ServerStart http server start
-func (s *Server) ServerStart() {
+// Start http server start
+func (s *Server) Start() {
 	// start server
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	server := &http.Server{Addr: s.Address, Handler: s}
+	fmt.Printf("http server start port in %s\n", s.Address)
+	log.Fatal(server.ListenAndServe())
 }

@@ -6,7 +6,6 @@ import (
 )
 
 type QueryParams map[string]string
-type PathParams map[string]string
 
 // Route http request info
 type Route struct {
@@ -14,7 +13,6 @@ type Route struct {
 	Path        string
 	Handler     http.HandlerFunc
 	QueryParams QueryParams
-	PathParams  PathParams
 }
 
 // Router http request routing
@@ -26,17 +24,18 @@ type Router struct {
 func NewRoute(method, path string, handler http.HandlerFunc) *Route {
 	r := &Route{
 		Method:      method,
-		Path:        path,
+		Path:        getPath(path),
 		Handler:     handler,
 		QueryParams: getQueryParams(path),
-		PathParams:  PathParams{},
 	}
 	return r
 }
 
 // NewRouter generate new router
 func NewRouter() *Router {
-	return new(Router)
+	return &Router{
+		Route: make(map[string]*Route),
+	}
 }
 
 // Add add new route
@@ -70,8 +69,24 @@ func getQueryParams(path string) QueryParams {
 	// Add query parameters to map
 	for _, q := range params {
 		param := strings.Split(q, "=")
-		queryParams[param[0]] = param[1]
+		if len(param) == 2 && param[0] != "" {
+			queryParams[param[0]] = param[1]
+		}
 	}
 
 	return queryParams
+}
+
+// getPath get URI
+func getPath(path string) string {
+	separators := []string{"/", "?"}
+
+	for _, sep := range separators {
+		pl := strings.Index(path[1:], sep)
+		if pl != -1 {
+			return path[:pl+1]
+		}
+	}
+
+	return path
 }

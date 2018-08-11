@@ -10,24 +10,8 @@ import (
 // uuid v4 regexp
 var validUUID = regexp.MustCompile("^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-4[a-fA-F0-9]{3}-[8|9|aA|bB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$")
 
-// UserHandler handle user request
-func UserHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodPost:
-		Register(w, r)
-	case http.MethodGet:
-		Reader(w, r)
-	case http.MethodPut:
-		Updater(w, r)
-	case http.MethodDelete:
-		Deleter(w, r)
-	default:
-		NotFoundResources(w, r)
-	}
-}
-
 // Register regist user info
-func Register(w http.ResponseWriter, r *http.Request) {
+func UserRegister(w http.ResponseWriter, r *http.Request) {
 	if err := checkRequestHeader(r); err != nil {
 		newHTTPError(w, err)
 		return
@@ -50,7 +34,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 }
 
 // Updater update user info
-func Updater(w http.ResponseWriter, r *http.Request) {
+func UserUpdater(w http.ResponseWriter, r *http.Request) {
 	if err := checkRequestHeader(r); err != nil {
 		newHTTPError(w, err)
 		return
@@ -81,7 +65,7 @@ func Updater(w http.ResponseWriter, r *http.Request) {
 }
 
 // Reader get user info
-func Reader(w http.ResponseWriter, r *http.Request) {
+func UserReader(w http.ResponseWriter, r *http.Request) {
 
 	id, err := getUserID(r)
 	if err != nil {
@@ -112,7 +96,7 @@ func Reader(w http.ResponseWriter, r *http.Request) {
 }
 
 // Deleter delete user info
-func Deleter(w http.ResponseWriter, r *http.Request) {
+func UserDeleter(w http.ResponseWriter, r *http.Request) {
 	id, err := getUserID(r)
 
 	if err != nil {
