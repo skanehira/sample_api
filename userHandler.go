@@ -10,25 +10,9 @@ import (
 // uuid v4 regexp
 var validUUID = regexp.MustCompile("^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-4[a-fA-F0-9]{3}-[8|9|aA|bB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$")
 
-// UserHandler handle user request
-func UserHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodPost:
-		Register(w, r)
-	case http.MethodGet:
-		Reader(w, r)
-	case http.MethodPut:
-		Updater(w, r)
-	case http.MethodDelete:
-		Deleter(w, r)
-	default:
-		NotFoundResources(w, r)
-	}
-}
-
 // Register regist user info
-func Register(w http.ResponseWriter, r *http.Request) {
-	if err := checkRequestHeader(r); err != nil {
+func UserRegister(w http.ResponseWriter, r *http.Request) {
+	if err := checkHeader(r); err != nil {
 		newHTTPError(w, err)
 		return
 	}
@@ -50,19 +34,16 @@ func Register(w http.ResponseWriter, r *http.Request) {
 }
 
 // Updater update user info
-func Updater(w http.ResponseWriter, r *http.Request) {
-	if err := checkRequestHeader(r); err != nil {
+func UserUpdater(w http.ResponseWriter, r *http.Request) {
+	if err := checkHeader(r); err != nil {
 		newHTTPError(w, err)
 		return
 	}
+	q := r.URL.Query()
+	id := q.Get("id")
 
-	id, err := getUserID(r)
-	if err != nil {
-		newHTTPError(w, err)
-		return
-	}
 	newUser := User{}
-	err = requestBodyToStruct(r, &newUser)
+	err := requestBodyToStruct(r, &newUser)
 	newUser.ID = id
 
 	if err != nil {
@@ -81,13 +62,9 @@ func Updater(w http.ResponseWriter, r *http.Request) {
 }
 
 // Reader get user info
-func Reader(w http.ResponseWriter, r *http.Request) {
-
-	id, err := getUserID(r)
-	if err != nil {
-		newHTTPError(w, err)
-		return
-	}
+func UserReader(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	id := q.Get("id")
 
 	if id != "" {
 		user, err := ReadUser(id)
@@ -112,15 +89,11 @@ func Reader(w http.ResponseWriter, r *http.Request) {
 }
 
 // Deleter delete user info
-func Deleter(w http.ResponseWriter, r *http.Request) {
-	id, err := getUserID(r)
+func UserDeleter(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	id := q.Get("id")
 
-	if err != nil {
-		newHTTPError(w, err)
-		return
-	}
-
-	err = DeleteUser(id)
+	err := DeleteUser(id)
 	if err != nil {
 		newHTTPError(w, err)
 		return
@@ -191,7 +164,7 @@ func requestBodyToStruct(r *http.Request, data interface{}) error {
 }
 
 // check post and put request header
-func checkRequestHeader(r *http.Request) error {
+func checkHeader(r *http.Request) error {
 	if r.Method == http.MethodPost || r.Method == http.MethodPut {
 		code := http.StatusBadRequest
 		if r.Header.Get("Content-type") != "application/json" {
